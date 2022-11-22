@@ -90,14 +90,12 @@ for p in profsNumerical:
     for i in intervals:
         model += lpSum(x[p][a][i] for a in coursesNumerical) <= 1
 
-# # CONSTRAINT 3:
-# for p in profsNumerical:
-#     for a in coursesNumerical:
-#         for i in intervals:
-#             print(vMat[p][a][i])
-#             print(x[p][a][i])
-
-#             model += lpSum(vMat[p][a][i] - x[p][a][i]) >= 0
+# CONSTRAINT 3:
+for p in profsNumerical:
+    for a in coursesNumerical:
+        for i in intervals:
+            if vMat[p][a][i] == 0:
+                model += (x[p][a][i]==0)
 
 
 # CONSTRAINT 4:
@@ -115,4 +113,5 @@ print(f"objective: {model.objective.value()}")
 
 print(f"status: {model.status}, {LpStatus[model.status]}")
 for var in model.variables():
-    print(f"{var.name}: {var.value()}")
+    if var.value() != 0:
+        print(f"{var.name}: {var.value()}")
