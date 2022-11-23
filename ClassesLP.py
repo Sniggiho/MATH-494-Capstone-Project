@@ -103,9 +103,14 @@ for p in profsNumerical:
     model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 3
 
 
+#OBJECTIVE FUNCTION??
 
-obj_func = 0
-model += obj_func
+#this is our long list of sums
+    obj_func = lpSum(((lpSum(x[p][a][i] for p in profsNumerical))* (lpSum(x[p][b][i] for p in profsNumerical))* wMat[a][b]) for a in coursesNumerical for b in coursesNumerical)
+
+#and then we do it for all i
+for i in intervals:
+    model += obj_func
 
 status = model.solve()
 
