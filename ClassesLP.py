@@ -71,6 +71,7 @@ profsNumerical = list(range(len(profs)))
 
 courses = [135,137,236,237,279,375,377,479] # a random assortment of courses
 coursesNumerical = list(range(len(courses)))
+wMat = makeWMat(courses)
 
 intervals = list(range(12))
 
@@ -79,7 +80,7 @@ intervals = list(range(12))
 model = LpProblem(name='classes', sense=LpMinimize)
 
 x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
-
+e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical))
 
 # CONSTRAINT 1:
 for a in coursesNumerical:
@@ -102,17 +103,18 @@ for p in profsNumerical:
 for p in profsNumerical:
     model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 3
 
+# CONSTRAINT 5:
+    for i in intervals:
+        for a in coursesNumerical:
+            for b in coursesNumerical:
+                model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
 
-#OBJECTIVE FUNCTION??
+# OBJECTIVE FUNCTION: 
+obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
+model += obj_func
 
-#this is our long list of sums
-    obj_func = lpSum(((lpSum(x[p][a][i] for p in profsNumerical))* (lpSum(x[p][b][i] for p in profsNumerical))* wMat[a][b]) for a in coursesNumerical for b in coursesNumerical)
 
-#and then we do it for all i
-for i in intervals:
-    model += obj_func
-
-status = model.solve()
+status = model.solve(PULP_CBC_CMD(msg=1, maxSeconds=60))
 
 print(f"objective: {model.objective.value()}")
 
