@@ -55,12 +55,14 @@ def makeWMat(listOfCourseNumbers):
             key1 = 1000*aLevel + bLevel
             key2 = 1000*bLevel + aLevel
 
+            if a == b:
+                wMat[a][b] = 0
+            else:
+                if key1 in weightsByNum.keys():
+                    wMat[a][b] = weightsByNum[key1]
 
-            if key1 in weightsByNum.keys():
-                wMat[a][b] = weightsByNum[key1]
-
-            if key2 in weightsByNum.keys():
-                wMat[a][b] = weightsByNum[key2]
+                if key2 in weightsByNum.keys():
+                    wMat[a][b] = weightsByNum[key2]
 
     return wMat
 # -----------------------------------------------------------------------------------------
@@ -113,6 +115,8 @@ for p in profsNumerical:
 obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
 model += obj_func
 
+
+printMat(wMat)
 
 status = model.solve(PULP_CBC_CMD(msg=1, maxSeconds=60))
 
