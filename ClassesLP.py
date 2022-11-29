@@ -27,8 +27,10 @@ for prof in profs: # reads in each CSV, adding its data to vMat. Numbers profess
     with open(currPath, newline = '') as csvfile:
         vMat[i] = list(csv.reader(csvfile))
     i += 1
-# -----------------------------------------------------------------------------------------
 
+    
+
+# -----------------------------------------------------------------------------------------
 
 # --------------------------- make conflict weight matrix ---------------------------------
 def makeWMat(listOfCourseNumbers):
@@ -77,12 +79,15 @@ wMat = makeWMat(courses)
 
 intervals = list(range(12))
 
-
+for p in profsNumerical:
+    for a in coursesNumerical:
+        for i in intervals:
+            vMat[p][a][i] = int(vMat[p][a][i])
 
 model = LpProblem(name='classes', sense=LpMinimize)
 
 x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
-e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical))
+e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical), lowBound=0)
 
 # CONSTRAINT 1:
 for a in coursesNumerical:
@@ -116,9 +121,8 @@ obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNu
 model += obj_func
 
 
-printMat(wMat)
 
-status = model.solve(PULP_CBC_CMD(msg=1, maxSeconds=60))
+status = model.solve(PULP_CBC_CMD(gapRel=0))
 
 print(f"objective: {model.objective.value()}")
 
