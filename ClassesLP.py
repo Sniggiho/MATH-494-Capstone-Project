@@ -60,10 +60,12 @@ def makeWMat(listOfCourseNumbers):
             if a == b:
                 wMat[a][b] = 0
             else:
-                if key1 in weightsByNum.keys():
+                if listOfCourseNumbers[a] == listOfCourseNumbers[b]:
+                    wMat[a][b] = 5
+                elif key1 in weightsByNum.keys():
                     wMat[a][b] = weightsByNum[key1]
 
-                if key2 in weightsByNum.keys():
+                elif key2 in weightsByNum.keys():
                     wMat[a][b] = weightsByNum[key2]
 
     return wMat
@@ -73,7 +75,7 @@ def makeWMat(listOfCourseNumbers):
 # -------------------------------- the LP !!???!?!?! ---------------------------------------
 profsNumerical = list(range(len(profs)))
 
-courses = [135,137,236,237,279,375,377,479] # a random assortment of courses
+courses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # a random assortment of courses
 coursesNumerical = list(range(len(courses)))
 wMat = makeWMat(courses)
 
@@ -108,12 +110,12 @@ for p in profsNumerical:
 
 # CONSTRAINT 4:
 for p in profsNumerical:
-    model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 3
+    model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 2
 
 # CONSTRAINT 5:
     for i in intervals:
         for a in coursesNumerical:
-            for b in coursesNumerical:
+            for b in coursesNumerical[a:]:
                 model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
 
 # OBJECTIVE FUNCTION: 
@@ -122,7 +124,7 @@ model += obj_func
 
 
 
-status = model.solve(PULP_CBC_CMD(gapRel=0))
+status = model.solve(PULP_CBC_CMD(timeLimit=60))
 
 print(f"objective: {model.objective.value()}")
 
