@@ -77,8 +77,10 @@ profsNumerical = list(range(len(profs)))
 
 allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
 courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
-# coursesNumerical = list(range(len(courses)))
-coursesNumerical = [0,0,0,1,1,1,2,2,3,3,4,5,7,8,12] # doesnt quite work, need to actually define a mapping
+
+coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
+courseMapping = [0,0,0,1,1,1,2,2,3,3,4,4,5,7,8,12] # supplies a mapping from course numbers based on proposed schedule, and course id numbers in the validity matrix
+# The id number for the course in the validity matrix is held at the index corresponding to the nuber of the course in the proposed courses
 
 
 wMat = makeWMat(courses)
@@ -86,11 +88,9 @@ wMat = makeWMat(courses)
 intervals = list(range(12))
 
 for p in profsNumerical:
-    for a in coursesNumerical:
+    for a in range(len(allCourses)):
         for i in intervals:
             vMat[p][a][i] = int(vMat[p][a][i])
-
-printMat(vMat)
 
 model = LpProblem(name='classes', sense=LpMinimize)
 
@@ -110,26 +110,26 @@ for p in profsNumerical:
 for p in profsNumerical:
     for a in coursesNumerical:
         for i in intervals:
-            if vMat[p][a][i] == 0:
+            if vMat[p][courseMapping[a]][i] == 0: # this is the problem!! 
                 if p == 5:
                     print("constrained lori, no course", a, "in slot", i)
                 model += (x[p][a][i]==0)
-
 
 # CONSTRAINT 4:
 for p in profsNumerical:
     model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 2
 
 # CONSTRAINT 5:
-    for i in intervals:
-        for a in coursesNumerical:
-            for b in coursesNumerical[a:]:
-                model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
+for i in intervals:
+    for a in coursesNumerical:
+        for b in coursesNumerical[a:]:
+            model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
+
+
 
 # OBJECTIVE FUNCTION: 
 obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
 model += obj_func
-
 
 status = model.solve(PULP_CBC_CMD(timeLimit=60))
 
