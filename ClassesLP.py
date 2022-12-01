@@ -75,8 +75,12 @@ def makeWMat(listOfCourseNumbers):
 # -------------------------------- the LP !!???!?!?! ---------------------------------------
 profsNumerical = list(range(len(profs)))
 
-courses = [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # a random assortment of courses
-coursesNumerical = list(range(len(courses)))
+allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
+courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
+# coursesNumerical = list(range(len(courses)))
+coursesNumerical = [0,0,0,1,1,1,2,2,3,3,4,5,7,8,12] # doesnt quite work, need to actually define a mapping
+
+
 wMat = makeWMat(courses)
 
 intervals = list(range(12))
@@ -85,6 +89,8 @@ for p in profsNumerical:
     for a in coursesNumerical:
         for i in intervals:
             vMat[p][a][i] = int(vMat[p][a][i])
+
+printMat(vMat)
 
 model = LpProblem(name='classes', sense=LpMinimize)
 
