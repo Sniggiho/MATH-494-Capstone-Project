@@ -105,6 +105,8 @@ for p in profsNumerical:
     for a in coursesNumerical:
         for i in intervals:
             if vMat[p][a][i] == 0:
+                if p == 5:
+                    print("constrained lori, no course", a, "in slot", i)
                 model += (x[p][a][i]==0)
 
 
