@@ -75,7 +75,7 @@ def makeWMat(listOfCourseNumbers):
 # -------------------------------- the LP !!???!?!?! ---------------------------------------
 profsNumerical = list(range(len(profs)))
 
-courses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # a random assortment of courses
+courses = [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # a random assortment of courses
 coursesNumerical = list(range(len(courses)))
 wMat = makeWMat(courses)
 
@@ -121,7 +121,6 @@ for p in profsNumerical:
 # OBJECTIVE FUNCTION: 
 obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
 model += obj_func
-
 
 
 status = model.solve(PULP_CBC_CMD(timeLimit=60))
