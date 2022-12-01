@@ -110,9 +110,7 @@ for p in profsNumerical:
 for p in profsNumerical:
     for a in coursesNumerical:
         for i in intervals:
-            if vMat[p][courseMapping[a]][i] == 0: # this is the problem!! 
-                if p == 5:
-                    print("constrained lori, no course", a, "in slot", i)
+            if vMat[p][courseMapping[a]][i] == 0:
                 model += (x[p][a][i]==0)
 
 # CONSTRAINT 4:
@@ -124,6 +122,10 @@ for i in intervals:
     for a in coursesNumerical:
         for b in coursesNumerical[a:]:
             model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
+
+
+# CONSTRAINT DAVE:
+model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class
 
 
 
