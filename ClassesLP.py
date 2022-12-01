@@ -137,7 +137,16 @@ status = model.solve(PULP_CBC_CMD(timeLimit=60))
 
 print(f"objective: {model.objective.value()}")
 
+
+
 print(f"status: {model.status}, {LpStatus[model.status]}")
-for var in model.variables():
-    if var.value() != 0:
-        print(f"{var.name}: {var.value()}")
+# for var in model.variables():
+#     if var.value() != 0:
+#         print(f"{var.name}: {var.value()}")
+
+
+for p in profsNumerical:
+    for a in coursesNumerical:
+        for i in intervals:
+            if x[p][a][i].value() == 1:
+                print(profs[p],"teaches", courses[a], "in time slot", i)
