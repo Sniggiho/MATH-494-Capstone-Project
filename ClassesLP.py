@@ -133,18 +133,13 @@ model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Da
 obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
 model += obj_func
 
+
+
+# SOLVE AND PRINT RESULTS
 status = model.solve(PULP_CBC_CMD(timeLimit=60))
 
-print(f"objective: {model.objective.value()}")
-
-
-
 print(f"status: {model.status}, {LpStatus[model.status]}")
-# for var in model.variables():
-#     if var.value() != 0:
-#         print(f"{var.name}: {var.value()}")
-
-
+print(f"objective: {model.objective.value()}")
 for p in profsNumerical:
     for a in coursesNumerical:
         for i in intervals:
