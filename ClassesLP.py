@@ -28,6 +28,11 @@ def makeVMat(profs):
             vMat[i] = list(csv.reader(csvfile))
         i += 1
 
+    for p in range(len(vMat)): # converts each entry into an int (rather than a char)
+        for a in range(len(vMat[p])):
+            for i in range(len(vMat[p][a])):
+                vMat[p][a][i] = int(vMat[p][a][i])
+
     return vMat
 # -----------------------------------------------------------------------------------------
 
@@ -78,8 +83,6 @@ def makeWMat(listOfCourseNumbers):
 
 # -------------------------------- the LP !!???!?!?! ---------------------------------------
 
-profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
-courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
 
 def makeCourseMapping(allCourses, currentCourses):
     """Makes a list mapping the in-order number of courses in the current selection of courses being sceduled,
@@ -96,76 +99,78 @@ def makeCourseMapping(allCourses, currentCourses):
     return courseMapping
 
 
-# def makeSchedule(profs, courses):
+def makeSchedule(profs, courses):
+    """Does all preprocessing necessary to run the IP based on the given list of profs and courses"""
+    allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
+    
+    wMat = makeWMat(courses)
 
-vMat = makeVMat(profs)
-profsNumerical = list(range(len(profs)))
+    profsNumerical = list(range(len(profs)))
+    vMat = makeVMat(profs)
 
-allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
+    coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
+    courseMapping = makeCourseMapping(allCourses, courses)
 
-coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
-courseMapping = makeCourseMapping(allCourses, courses)
+    intervals = list(range(12))
+
+    courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat)
 
 
+def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat):   
+    model = LpProblem(name='classes', sense=LpMinimize)
 
-wMat = makeWMat(courses)
+    x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
+    e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical), lowBound=0)
 
-intervals = list(range(12))
+    # CONSTRAINT 1:
+    for a in coursesNumerical:
+        model += lpSum(x[p][a][i] for p in profsNumerical for i in intervals) == 1
 
-for p in profsNumerical:
-    for a in range(len(allCourses)):
+    # CONSTRAINT 2:
+    for p in profsNumerical:
         for i in intervals:
-            vMat[p][a][i] = int(vMat[p][a][i])
+            model += lpSum(x[p][a][i] for a in coursesNumerical) <= 1
 
-model = LpProblem(name='classes', sense=LpMinimize)
+    # CONSTRAINT 3:
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for i in intervals:
+                if vMat[p][courseMapping[a]][i] == 0:
+                    model += (x[p][a][i]==0)
 
-x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
-e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical), lowBound=0)
+    # CONSTRAINT 4:
+    for p in profsNumerical:
+        model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 2
 
-# CONSTRAINT 1:
-for a in coursesNumerical:
-    model += lpSum(x[p][a][i] for p in profsNumerical for i in intervals) == 1
-
-# CONSTRAINT 2:
-for p in profsNumerical:
+    # CONSTRAINT 5:
     for i in intervals:
-        model += lpSum(x[p][a][i] for a in coursesNumerical) <= 1
-
-# CONSTRAINT 3:
-for p in profsNumerical:
-    for a in coursesNumerical:
-        for i in intervals:
-            if vMat[p][courseMapping[a]][i] == 0:
-                model += (x[p][a][i]==0)
-
-# CONSTRAINT 4:
-for p in profsNumerical:
-    model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 2
-
-# CONSTRAINT 5:
-for i in intervals:
-    for a in coursesNumerical:
-        for b in coursesNumerical[a:]:
-            model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
+        for a in coursesNumerical:
+            for b in coursesNumerical[a:]:
+                model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
 
 
-# CONSTRAINT DAVE:
-model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class
+    # CONSTRAINT DAVE:
+    model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class
 
 
 
-# OBJECTIVE FUNCTION: 
-obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
-model += obj_func
+    # OBJECTIVE FUNCTION: 
+    obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
+    model += obj_func
 
 
-# SOLVE AND PRINT RESULTS
-status = model.solve(PULP_CBC_CMD(timeLimit=60))
+    # SOLVE AND PRINT RESULTS
+    status = model.solve(PULP_CBC_CMD(timeLimit=60))
 
-print(f"status: {model.status}, {LpStatus[model.status]}")
-print(f"objective: {model.objective.value()}")
-for p in profsNumerical:
-    for a in coursesNumerical:
-        for i in intervals:
-            if x[p][a][i].value() == 1:
-                print(profs[p],"teaches", courses[a], "in time slot", i)
+    print(f"status: {model.status}, {LpStatus[model.status]}")
+    print(f"objective: {model.objective.value()}")
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for i in intervals:
+                if x[p][a][i].value() == 1:
+                    print(profs[p],"teaches", courses[a], "in time slot", i)
+
+profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
+courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
+
+makeSchedule(profs, courses)
