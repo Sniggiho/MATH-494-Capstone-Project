@@ -100,7 +100,9 @@ def makeCourseMapping(allCourses, currentCourses):
 
 
 def makeSchedule(profs, courses):
-    """Does all preprocessing necessary to run the IP based on the given list of profs and courses"""
+    """Does all preprocessing necessary to run the IP based on the given list of profs and courses
+    
+    TODO: flech this out"""
     allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
     
     wMat = makeWMat(courses)
@@ -116,7 +118,8 @@ def makeSchedule(profs, courses):
     courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat)
 
 
-def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat):   
+def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat):
+    """The IP itself TODO: flech this out"""   
     model = LpProblem(name='classes', sense=LpMinimize)
 
     x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
