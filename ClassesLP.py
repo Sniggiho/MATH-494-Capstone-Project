@@ -12,28 +12,37 @@ def printMat(A): # prints a matrix in a readable fashion
         print(row)
 # -----------------------------------------------------------------------------------------
 
-
-
 # --------------------------- import data and create V matrix -----------------------------
-
-profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
-
-vMat = [None]*len(profs) # initialize the viability matrix to be empty
-
-i = 0 # loop variable that numbers the profs
-
-for prof in profs: # reads in each CSV, adding its data to vMat. Numbers professors in the order they appear in profs
-    currPath = 'V_pai CSVs by Prof\V_' + prof + '.csv'
-    with open(currPath, newline = '') as csvfile:
-        vMat[i] = list(csv.reader(csvfile))
-    i += 1
-
+def makeVMat(profs):
+    """Takes in a list of professor names, reads the corresponding CSVs, and bakes them into the 3d viability matrix
     
+    NOTE: individual professor validity matrices must be in the folder 'V_pai CSVs by Prof', and be named in the form 'V_[prof name].csv'"""
 
+    vMat = [None]*len(profs) # initialize the viability matrix to be empty
+
+    i = 0 # loop variable that numbers the profs
+
+    for prof in profs: # reads in each CSV, adding its data to vMat. Numbers professors in the order they appear in profs
+        currPath = 'V_pai CSVs by Prof\V_' + prof + '.csv'
+        with open(currPath, newline = '') as csvfile:
+            vMat[i] = list(csv.reader(csvfile))
+        i += 1
+
+    return vMat
 # -----------------------------------------------------------------------------------------
 
 # --------------------------- make conflict weight matrix ---------------------------------
 def makeWMat(listOfCourseNumbers):
+    """
+    NOTE: listOfCourseNumbers must be given in numerical non-decreasing order
+
+    Given a list of n three digit macalester course numbers, creates an n x n matrix
+    holding the assigned weight of a potential conflict between course i and j in wMat[i][j].
+    
+    Weights are assigned based on the relative course number of each pair of courses, e.g. 
+    a conflict between two 300 level courses is considered quite bad, where a conflict between
+    a 100 and 400 level course is not a problem. """
+
     weightsByNum = { # this controls how conflicts are weighted based on their course numbers
         100100: 0,
         100200: 2,
@@ -49,30 +58,28 @@ def makeWMat(listOfCourseNumbers):
 
     wMat = [[0 for x in range(len(listOfCourseNumbers))] for y in range(len(listOfCourseNumbers))] # initializes the weight matrix with all 0s
 
-    for a in range(len(listOfCourseNumbers)): # TODO: super inelegant!!! exploit matrix symmetry
-        for b in range(len(listOfCourseNumbers)):
-            aLevel = listOfCourseNumbers[a] - listOfCourseNumbers[a]%100
+    for a in range(len(listOfCourseNumbers)): # uses the above dictionary to fill in the weight matrix
+        for b in range(a,len(listOfCourseNumbers)):
 
+            aLevel = listOfCourseNumbers[a] - listOfCourseNumbers[a]%100
             bLevel = listOfCourseNumbers[b] - listOfCourseNumbers[b]%100
             key1 = 1000*aLevel + bLevel
-            key2 = 1000*bLevel + aLevel
 
-            if a == b:
+            if a == b: # there is no conflict of a course with itself
                 wMat[a][b] = 0
             else:
-                if listOfCourseNumbers[a] == listOfCourseNumbers[b]:
+                if listOfCourseNumbers[a] == listOfCourseNumbers[b]: # if they're different sections of the same course, their conflict should be high
                     wMat[a][b] = 5
                 elif key1 in weightsByNum.keys():
                     wMat[a][b] = weightsByNum[key1]
 
-                elif key2 in weightsByNum.keys():
-                    wMat[a][b] = weightsByNum[key2]
-
     return wMat
 # -----------------------------------------------------------------------------------------
 
-
 # -------------------------------- the LP !!???!?!?! ---------------------------------------
+
+profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
+vMat = makeVMat(profs)
 profsNumerical = list(range(len(profs)))
 
 allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
@@ -81,6 +88,7 @@ courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] #
 coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
 courseMapping = [0,0,0,1,1,1,2,2,3,3,4,4,5,7,8,12] # supplies a mapping from course numbers based on proposed schedule, and course id numbers in the validity matrix
 # The id number for the course in the validity matrix is held at the index corresponding to the nuber of the course in the proposed courses
+
 
 
 wMat = makeWMat(courses)
@@ -132,7 +140,6 @@ model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Da
 # OBJECTIVE FUNCTION: 
 obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
 model += obj_func
-
 
 
 # SOLVE AND PRINT RESULTS
