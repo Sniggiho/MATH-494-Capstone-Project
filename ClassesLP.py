@@ -79,15 +79,32 @@ def makeWMat(listOfCourseNumbers):
 # -------------------------------- the LP !!???!?!?! ---------------------------------------
 
 profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
+courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
+
+def makeCourseMapping(allCourses, currentCourses):
+    """Makes a list mapping the in-order number of courses in the current selection of courses being sceduled,
+    to the number associated with that course in the validity matrix. This becomes important when not all courses
+    are offered each term, and some are offered multiple times.
+        
+    For example, a mapping list like [0,0,0,1,1,1,2,...] indicates that the third course in the current courses
+    is course 0 in the validity matrix; in this case because there are three sections of Calc I."""
+    courseMapping = [None]*len(currentCourses)
+
+    for i in range(len(currentCourses)):
+        courseMapping[i] = allCourses.index(currentCourses[i])
+
+    return courseMapping
+
+
+# def makeSchedule(profs, courses):
+
 vMat = makeVMat(profs)
 profsNumerical = list(range(len(profs)))
 
 allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
-courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
 
 coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
-courseMapping = [0,0,0,1,1,1,2,2,3,3,4,4,5,7,8,12] # supplies a mapping from course numbers based on proposed schedule, and course id numbers in the validity matrix
-# The id number for the course in the validity matrix is held at the index corresponding to the nuber of the course in the proposed courses
+courseMapping = makeCourseMapping(allCourses, courses)
 
 
 
