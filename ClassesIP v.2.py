@@ -143,7 +143,7 @@ def makeSchedule(profs, courses):
     allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
 
     l = 0
-    while courses[l] < 200:
+    while courses[l] <300:
         l += 1
         
     wMat = makeWMat(courses)
@@ -197,6 +197,15 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
     # CONSTRAINT 6:
     for p in profsNumerical:
         model += lpSum(x[p][a][i] for a in coursesNumerical[l:] for i in intervals) + z[p] <=2
+
+    # CONSTRAINT 7:
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for b in coursesNumerical[a+1:]:
+                for c in coursesNumerical[b+1:]:
+                    m = (courseMapping[b]-courseMapping[a])*(courseMapping[c]-courseMapping[a])*(courseMapping[c]-courseMapping[b])
+                    model+= (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals) + lpSum(x[p][c][i] for i in intervals))*m <= 2.5*m
+                
 
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
