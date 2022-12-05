@@ -141,7 +141,11 @@ def makeSchedule(profs, courses):
     
     TODO: flech this out"""
     allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
-    
+
+    l = 0
+    while courses[l] < 200:
+        l += 1
+        
     wMat = makeWMat(courses)
 
     profsNumerical = list(range(len(profs)))
@@ -152,10 +156,10 @@ def makeSchedule(profs, courses):
 
     intervals = list(range(12))
 
-    courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs)
+    courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l)
 
 
-def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs):
+def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l):
     """The IP itself TODO: flech this out"""   
     model = LpProblem(name='classes', sense=LpMinimize)
 
@@ -190,6 +194,9 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
             for b in coursesNumerical[a:]:
                 model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
 
+    # CONSTRAINT 6:
+    for p in profsNumerical:
+        model += lpSum(x[p][a][i] for a in coursesNumerical[l:] for i in intervals) + z[p] <=2
 
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
@@ -204,7 +211,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
     # SOLVE AND PRINT RESULTS
-    model.solve(PULP_CBC_CMD(timeLimit=120))
+    model.solve(PULP_CBC_CMD(timeLimit=12))
 
     print(f"status: {model.status}, {LpStatus[model.status]}")
     print(f"objective: {model.objective.value()}")
@@ -225,4 +232,4 @@ profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Racheal", "Will"
 coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profs, coursesSpring)
+makeSchedule(profsFall, coursesFall)
