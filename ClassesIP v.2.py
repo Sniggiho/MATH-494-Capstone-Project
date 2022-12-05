@@ -194,7 +194,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
             for b in coursesNumerical[a:]:
                 model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
 
-    # CONSTRAINT 6:
+    # # CONSTRAINT 6:
     for p in profsNumerical:
         model += lpSum(x[p][a][i] for a in coursesNumerical[l:] for i in intervals) + z[p] <=2
 
@@ -220,7 +220,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
     # SOLVE AND PRINT RESULTS
-    model.solve(PULP_CBC_CMD(timeLimit=12))
+    model.solve(PULP_CBC_CMD(timeLimit=240))
 
     print(f"status: {model.status}, {LpStatus[model.status]}")
     print(f"objective: {model.objective.value()}")
@@ -241,4 +241,4 @@ profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Racheal", "Will"
 coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profsFall, coursesFall)
+makeSchedule(profs, coursesSpring)
