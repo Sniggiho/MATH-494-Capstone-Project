@@ -23,7 +23,7 @@ def makeVMat(profs):
     i = 0 # loop variable that numbers the profs
 
     for prof in profs: # reads in each CSV, adding its data to vMat. Numbers professors in the order they appear in profs
-        currPath = 'V_pai CSVs by Prof\V_' + prof + '.csv'
+        currPath = 'V_pai CSVs by Prof/V_' + prof + '.csv'
         with open(currPath, newline = '') as csvfile:
             vMat[i] = list(csv.reader(csvfile))
         i += 1
@@ -143,7 +143,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
     # CONSTRAINT 4:
     for p in profsNumerical:
-        model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 2
+        model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) <= 3
 
     # CONSTRAINT 5:
     for i in intervals:
@@ -171,9 +171,10 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
         for a in coursesNumerical:
             for i in intervals:
                 if x[p][a][i].value() == 1:
-                    print(profs[p],"teaches", courses[a], "in time slot", i)
+                    print(profs[p],"teaches", coursesSpring[a], "in time slot", i)
 
 profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
-courses =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
+coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
+coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profs, courses)
+makeSchedule(profs, coursesSpring)
