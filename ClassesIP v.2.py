@@ -161,7 +161,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
     x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
     e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical), lowBound=0)
-    z = LpVariable.dicts("e", (profsNumerical), lowBound=0)
+    z = LpVariable.dicts("z", (profsNumerical), lowBound=0, upBound=1)
 
     # CONSTRAINT 1:
     for a in coursesNumerical:
@@ -197,21 +197,25 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
     # OBJECTIVE FUNCTION: 
-    obj_func = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical) + lpSum(z[p]for p in profsNumerical)
+    weights = lpSum(e[a][b]*wMat[a][b] for a in coursesNumerical for b in coursesNumerical)
+    zee = lpSum(z[p] for p in profsNumerical)
+    obj_func =  weights + zee
     model += obj_func
 
 
     # SOLVE AND PRINT RESULTS
-    model.solve(PULP_CBC_CMD(timeLimit=10))
+    model.solve(PULP_CBC_CMD(timeLimit=120))
 
     print(f"status: {model.status}, {LpStatus[model.status]}")
     print(f"objective: {model.objective.value()}")
-    print(profs)
+    print("Loss from conflicts:", weights.value())
+    print("Loss from prof. work load:", zee.value())
     for p in profsNumerical:
         for a in coursesNumerical:
             for i in intervals:
                 if x[p][a][i].value() == 1:
                     print(profs[p],"teaches", courseNames[courses[a]], "at", intervalNames[i])
+
 
 
 
@@ -221,4 +225,4 @@ profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Racheal", "Will"
 coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profs, coursesFall)
+makeSchedule(profs, coursesSpring)
