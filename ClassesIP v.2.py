@@ -60,7 +60,7 @@ def makeVMat(profs):
     i = 0 # loop variable that numbers the profs
 
     for prof in profs: # reads in each CSV, adding its data to vMat. Numbers professors in the order they appear in profs
-        currPath = 'V_pai CSVs by Prof/V_' + prof + '.csv'
+        currPath = 'V_pai CSVs by Prof\V_' + prof + '.csv'
         with open(currPath, newline = '') as csvfile:
             vMat[i] = list(csv.reader(csvfile))
         i += 1
@@ -206,15 +206,25 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
                     m = (courseMapping[b]-courseMapping[a])*(courseMapping[c]-courseMapping[a])*(courseMapping[c]-courseMapping[b])
                     model+= (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals) + lpSum(x[p][c][i] for i in intervals))*m <= 2.5*m
     
-     # CONSTRAINT 8:
+    #  # CONSTRAINT 8:
+    # for p in profsNumerical:
+    #     for a in coursesNumerical:
+    #         for b in coursesNumerical:
+    #             if courseMapping[a] - courseMapping[b] == 0:
+    #                 for i in [0,10]:
+    #                     if x[p][a][i] == 1:
+    #                         model += (x[p][a][i] - x[p][b][i+1])  == 0
+
+    # CONSTRAINT 8
     for p in profsNumerical:
         for a in coursesNumerical:
-            for b in coursesNumerical:
-                if courseMapping[a] - courseMapping[b] == 0:
-                    for i in [0,10]:
-                        if x[p][a][i] == 1:
-                            model += (x[p][a][i] - x[p][b][i+1])  == 0
-
+            for b in coursesNumerical[a+1:]:
+                for i in intervals[1:len(intervals)-1]:
+                    if courseMapping[a] - courseMapping[b] == 0:
+                        model += (x[p][b][i-1] + x[p][b][i+1] >= x[p][a][i])
+                    else:
+                        model += (x[p][b][i-1] + x[p][b][i+1] <= (1 - x[p][a][i]))
+                        
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
 
@@ -228,7 +238,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
     # SOLVE AND PRINT RESULTS
-    model.solve(PULP_CBC_CMD(timeLimit=240))
+    model.solve(PULP_CBC_CMD(timeLimit=300))
 
     print(f"status: {model.status}, {LpStatus[model.status]}")
     print(f"objective: {model.objective.value()}")
@@ -243,10 +253,12 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
 
-profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Racheal", "Taryn", "Will"] # the names of each professor to be included in the program
-profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Racheal", "Will"] # the names of the profs who taught Fall 2022 (so not Lori or Taryn)
+profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Taryn", "Will"] # the names of each professor to be included in the program
+profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Rachael", "Will"] # the names of the profs who taught Fall 2022 (so not Lori or Taryn)
+profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Will"] # the names of the profs who taught Spring 2022 (so not Taryn)
+
 
 coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profs, coursesSpring)
+makeSchedule(profsSpring, coursesSpring)
