@@ -194,7 +194,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
         for a in coursesNumerical:
             for b in coursesNumerical:
                 if courseMapping[a] - courseMapping[b] == 0:
-                    model += (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals )) == 0
+                    model += (lpSum(x[p][a][i] for i in intervals) - lpSum(x[p][b][i] for i in intervals )) == 0
                                                                                  #it didn't like me trying to say intervals -1
 
     # CONSTRAINT DAVE:
