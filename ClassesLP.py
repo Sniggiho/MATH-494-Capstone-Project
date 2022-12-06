@@ -60,7 +60,7 @@ def makeVMat(profs):
     i = 0 # loop variable that numbers the profs
 
     for prof in profs: # reads in each CSV, adding its data to vMat. Numbers professors in the order they appear in profs
-        currPath = 'V_pai CSVs by Prof\V_' + prof + '.csv'
+        currPath = 'V_pai CSVs by Prof/V_' + prof + '.csv'
         with open(currPath, newline = '') as csvfile:
             vMat[i] = list(csv.reader(csvfile))
         i += 1
@@ -188,6 +188,14 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
             for b in coursesNumerical[a:]:
                 model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
 
+
+    # CONSTRAINT 6:
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for b in coursesNumerical:
+                if courseMapping[a] - courseMapping[b] == 0:
+                    model += (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals )) == 0
+                                                                                 #it didn't like me trying to say intervals -1
 
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
