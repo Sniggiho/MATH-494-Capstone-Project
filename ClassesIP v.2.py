@@ -114,6 +114,7 @@ def makeWMat(listOfCourseNumbers):
                     wMat[a][b] = 5
                 elif key1 in weightsByNum.keys():
                     wMat[a][b] = weightsByNum[key1]
+    printMat(wMat)
 
     return wMat
 # -----------------------------------------------------------------------------------------
@@ -133,6 +134,7 @@ def makeCourseMapping(allCourses, currentCourses):
     for i in range(len(currentCourses)):
         courseMapping[i] = allCourses.index(currentCourses[i])
 
+    print(courseMapping)
     return courseMapping
 
 
@@ -216,14 +218,18 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
     #                         model += (x[p][a][i] - x[p][b][i+1])  == 0
 
     # CONSTRAINT 8
-    for p in profsNumerical:
-        for a in coursesNumerical:
-            for b in coursesNumerical[a+1:]:
-                for i in intervals[1:len(intervals)-1]:
-                    if courseMapping[a] - courseMapping[b] == 0:
-                        model += (x[p][b][i-1] + x[p][b][i+1] >= x[p][a][i])
-                    else:
-                        model += (x[p][b][i-1] + x[p][b][i+1] <= (1 - x[p][a][i]))
+    # for p in profsNumerical:
+    #     for a in coursesNumerical:
+    #         for b in coursesNumerical[a+1:]:
+    #             for i in intervals[1:len(intervals)-1]:
+    #                 if courseMapping[a] == courseMapping[b]:
+    #                     model += (x[p][b][i-1] + x[p][b][i+1] >= x[p][a][i])
+    #                     # model += (x[p][b][len(intervals)-2] >= x[p][a][len(intervals)-1])
+    #                     # model += (x[p][b][1] >= x[p][a][0])
+    #                 else:
+    #                     model += (x[p][b][i-1] + x[p][b][i+1] <= (1 - x[p][a][i]))
+    #                     # model += (x[p][b][len(intervals)-2] <= (1 - x[p][a][len(intervals)-1]))
+    #                     # model += (x[p][b][1] <= 1- x[p][a][0])
                         
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
@@ -235,6 +241,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
     zee = lpSum(z[p] for p in profsNumerical)
     obj_func =  weights + zee
     model += obj_func
+
 
 
     # SOLVE AND PRINT RESULTS
@@ -258,7 +265,7 @@ profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Rachael", "Will"
 profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Will"] # the names of the profs who taught Spring 2022 (so not Taryn)
 
 
-coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] # courses from 2022 fall
+coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432,479] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profsSpring, coursesSpring)
+makeSchedule(profsFall, coursesFall)
