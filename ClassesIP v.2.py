@@ -208,14 +208,6 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
                     m = (courseMapping[b]-courseMapping[a])*(courseMapping[c]-courseMapping[a])*(courseMapping[c]-courseMapping[b])
                     model+= (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals) + lpSum(x[p][c][i] for i in intervals))*m <= 2.5*m
     
-    #  # CONSTRAINT 8:
-    # for p in profsNumerical:
-    #     for a in coursesNumerical:
-    #         for b in coursesNumerical:
-    #             if courseMapping[a] - courseMapping[b] == 0:
-    #                 for i in [0,10]:
-    #                     if x[p][a][i] == 1:
-    #                         model += (x[p][a][i] - x[p][b][i+1])  == 0
 
     # CONSTRAINT 8
     # for p in profsNumerical:
