@@ -137,6 +137,9 @@ def makeCourseMapping(allCourses, currentCourses):
     print(courseMapping)
     return courseMapping
 
+def makeSectionSubsets(courseMapping):
+    subsets =  [None]*len(set(courseMapping))
+    print(subsets)
 
 def makeSchedule(profs, courses):
     """Does all preprocessing necessary to run the IP based on the given list of profs and courses
@@ -260,4 +263,7 @@ profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael
 coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432,479] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
-makeSchedule(profsFall, coursesFall)
+
+mapping = makeCourseMapping([135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479], coursesFall)
+makeSectionSubsets(mapping)
+# makeSchedule(profsFall, coursesFall)
