@@ -138,7 +138,19 @@ def makeCourseMapping(allCourses, currentCourses):
     return courseMapping
 
 def makeSectionSubsets(courseMapping):
-    subsets =  [None]*len(set(courseMapping))
+    """TODO: DO THIS DOCUMENTATION"""
+    subsets =  [ [] for _ in range(len(set(courseMapping)))]
+    lastVal = courseMapping[0]
+    k = 0
+    for i in range(len(courseMapping)):
+        if courseMapping[i] == lastVal:
+            subsets[k].insert(0,i)
+        else:
+            k += 1
+            subsets[k].insert(0,i)
+            lastVal = courseMapping[i]
+
+
     print(subsets)
 
 def makeSchedule(profs, courses):
