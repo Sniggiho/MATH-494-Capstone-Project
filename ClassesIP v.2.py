@@ -114,7 +114,6 @@ def makeWMat(listOfCourseNumbers):
                     wMat[a][b] = 5
                 elif key1 in weightsByNum.keys():
                     wMat[a][b] = weightsByNum[key1]
-    printMat(wMat)
 
     return wMat
 # -----------------------------------------------------------------------------------------
@@ -134,7 +133,6 @@ def makeCourseMapping(allCourses, currentCourses):
     for i in range(len(currentCourses)):
         courseMapping[i] = allCourses.index(currentCourses[i])
 
-    print(courseMapping)
     return courseMapping
 
 def makeSectionSubsets(courseMapping):
@@ -150,8 +148,8 @@ def makeSectionSubsets(courseMapping):
             subsets[k].insert(0,i)
             lastVal = courseMapping[i]
 
+    return subsets
 
-    print(subsets)
 
 def makeSchedule(profs, courses):
     """Does all preprocessing necessary to run the IP based on the given list of profs and courses
@@ -170,19 +168,24 @@ def makeSchedule(profs, courses):
 
     coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
     courseMapping = makeCourseMapping(allCourses, courses)
+    sectionSubsets = makeSectionSubsets(courseMapping)
+    print(sectionSubsets)
 
     intervals = list(range(12))
 
-    courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l)
+
+    courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l, sectionSubsets)
 
 
-def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l):
+def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l, sectionSubsets):
     """The IP itself TODO: flech this out"""   
     model = LpProblem(name='classes', sense=LpMinimize)
 
     x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
     e = LpVariable.dicts("e", (coursesNumerical, coursesNumerical), lowBound=0)
     z = LpVariable.dicts("z", (profsNumerical), lowBound=0, upBound=1)
+    d = LpVariable.dicts("d", (profsNumerical, coursesNumerical, coursesNumerical, intervals), cat = "Binary")
+
 
     # CONSTRAINT 1:
     for a in coursesNumerical:
@@ -237,6 +240,24 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
     #                     model += (x[p][b][i-1] + x[p][b][i+1] <= (1 - x[p][a][i]))
     #                     # model += (x[p][b][len(intervals)-2] <= (1 - x[p][a][len(intervals)-1]))
     #                     # model += (x[p][b][1] <= 1- x[p][a][0])
+
+    # CONSTRAINT 8:
+    
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for b in coursesNumerical:
+                for i in intervals[:-1]:
+                    model += (x[p][a][i]+x[p][a][i+1]+x[p][b][i]+x[p][b][i+1] -2*d[p][a][b][i]>= 0)
+                    model += (x[p][a][i]+x[p][a][i+1]+x[p][b][i]+x[p][b][i+1] -2*d[p][a][b][i]<= 1)
+
+    # for p in profsNumerical:
+    #     for sectionSet in sectionSubsets:
+    #         if len(sectionSet) > 1:
+    #             print(sectionSet)
+
+    #             model += (lpSum(d[p][a][b][i] for a in sectionSet for b in sectionSet for i in intervals) >= lpSum(x[p][a][i] for a in sectionSet for i in intervals) -1 )
+    # fix after lunch!!
+    
                         
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
@@ -263,6 +284,11 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
             for i in intervals:
                 if x[p][a][i].value() == 1:
                     print(profs[p],"teaches", courseNames[courses[a]], "at", intervalNames[i])
+    for a in sectionSubsets[0]:
+        for b in sectionSubsets[0]:
+            for i in intervals[:-1]:
+                print(d[6][a][b][i].value())
+
 
 
 
@@ -272,10 +298,8 @@ profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Rachael", "Will"
 profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Will"] # the names of the profs who taught Spring 2022 (so not Taryn)
 
 
-coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432,479] # courses from 2022 fall
+coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] #,479] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
 
-mapping = makeCourseMapping([135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479], coursesFall)
-makeSectionSubsets(mapping)
-# makeSchedule(profsFall, coursesFall)
+makeSchedule(profsFall, coursesFall)
