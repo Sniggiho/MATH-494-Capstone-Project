@@ -213,6 +213,12 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
         for a in coursesNumerical:
             for b in coursesNumerical[a:]:
                 model += (lpSum(x[p][a][i] for p in profsNumerical) +  lpSum(x[p][b][i] for p in profsNumerical) - e[a][b]) <= 1
+    
+    for a in coursesNumerical:
+            for b in coursesNumerical[a:]:
+                model += (lpSum(x[p][a][0] for p in profsNumerical) +  lpSum(x[p][b][7] for p in profsNumerical) - e[a][b]) <= 1
+                model += (lpSum(x[p][a][7] for p in profsNumerical) +  lpSum(x[p][b][0] for p in profsNumerical) - e[a][b]) <= 1
+
 
     # # CONSTRAINT 6:
     for p in profsNumerical:
@@ -316,4 +322,4 @@ coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,43
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
 
-makeSchedule(profsSpring, coursesSpring)
+makeSchedule(profsFall, coursesFall)
