@@ -278,7 +278,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
     # SOLVE AND PRINT RESULTS
-    model.solve(PULP_CBC_CMD(timeLimit=300))
+    model.solve(PULP_CBC_CMD(timeLimit=3600))
 
     print(f"status: {model.status}, {LpStatus[model.status]}")
     print(f"objective: {model.objective.value()}")
@@ -318,7 +318,7 @@ profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Rachael", "Will"
 profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Will"] # the names of the profs who taught Spring 2022 (so not Taryn)
 
 
-coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432] #,479] # courses from 2022 fall
+coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432, 479] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
 
