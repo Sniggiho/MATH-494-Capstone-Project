@@ -272,7 +272,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
     # SOLVE AND PRINT RESULTS
-    model.solve(PULP_CBC_CMD(timeLimit=1500))
+    model.solve(PULP_CBC_CMD(timeLimit=300))
 
     print(f"status: {model.status}, {LpStatus[model.status]}")
     print(f"objective: {model.objective.value()}")
@@ -282,25 +282,25 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
         for a in coursesNumerical:
             for i in intervals:
                 if x[p][a][i].value() == 1:
-                    print(profs[p],"teaches", a, "which is", courseNames[courses[a]], "at", intervalNames[i])
+                    print(profs[p],"teaches", courseNames[courses[a]], "at", intervalNames[i])
 
-    for p in profsNumerical:  
-        j=0             
-        for a in range(len(sectionSubsets[4])):
-            for b in range(a+1, len(sectionSubsets[4])):
-                for i in intervals:
-                    if d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value() != None:
-                        j+= d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value()
-                    print(d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i], "=", d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value())
+    # for p in profsNumerical:  
+    #     j=0             
+    #     for a in range(len(sectionSubsets[4])):
+    #         for b in range(a+1, len(sectionSubsets[4])):
+    #             for i in intervals:
+    #                 if d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value() != None:
+    #                     j+= d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value()
+    #                 print(d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i], "=", d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value())
 
-        print("for p",p,"j=",j)
+    #     print("for p",p,"j=",j)
 
-    for p in profsNumerical:              
-        k = 0
-        for a in sectionSubsets[4]:
-            for i in intervals:
-                k += x[p][a][i].value()
-        print("k=",k)
+    # for p in profsNumerical:              
+    #     k = 0
+    #     for a in sectionSubsets[4]:
+    #         for i in intervals:
+    #             k += x[p][a][i].value()
+    #     print("k=",k)
 
 
 
@@ -316,4 +316,4 @@ coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,43
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
 
 
-makeSchedule(profsFall, coursesFall)
+makeSchedule(profsSpring, coursesSpring)
