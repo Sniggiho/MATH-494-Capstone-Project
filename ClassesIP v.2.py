@@ -149,7 +149,11 @@ def makeSectionSubsets(courseMapping):
 
 # -------------------------------------- the IP -------------------------------------------
 def makeSchedule(profs, courses):
-    """Does all preprocessing necessary to run the IP based on the given list of profs and courses. Use this to run schedule creation"""
+    """Does all preprocessing necessary to run the IP based on the given list of profs and courses. Use this to run schedule creation
+    
+    NOTE: courses must be sorted in non-decreasing order, and all profs must have corresponding V_[name].csv in 'V_pai CSVs by Prof' folder
+    
+    ALSO NOTE: constraint Dave is hardcoded to have Dave as professor 2... if that's no longer the case, then constraint dave should be removed/updated"""
 
     allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
 
@@ -242,7 +246,7 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
        
                         
     # CONSTRAINT DAVE:
-    model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
+    model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class
 
 
     # OBJECTIVE FUNCTION: 
