@@ -1,11 +1,10 @@
 # Rhys and Lola's MATH494 capstone scheduling project
-# TODO: Write more up here about the project
 
 from pulp import* # LP solver
 
 import csv # csv reading
 
-
+# --------------------------------------- Global Constants -------------------------------
 intervalNames = {
     0: "8:30-9:30 MWF",
     1: "9:40-10:40 MWF",
@@ -41,15 +40,16 @@ courseNames = {
     479: "479: Network Science",
 
 }
+# -----------------------------------------------------------------------------------------
 
-
-# ------------------------------- utilities -----------------------------------------------
+# ------------------------------- general utility------------------------------------------
 def printMat(A): # prints a matrix in a readable fashion
     for row in A:
         print(row)
 # -----------------------------------------------------------------------------------------
 
-# --------------------------- import data and create V matrix -----------------------------
+
+# -------------------------------------  setup helpers ------------------------------------
 def makeVMat(profs):
     """Takes in a list of professor names, reads the corresponding CSVs, and bakes them into the 3d viability matrix
     
@@ -71,9 +71,7 @@ def makeVMat(profs):
                 vMat[p][a][i] = int(vMat[p][a][i])
 
     return vMat
-# -----------------------------------------------------------------------------------------
 
-# --------------------------- make conflict weight matrix ---------------------------------
 def makeWMat(listOfCourseNumbers):
     """
     NOTE: listOfCourseNumbers must be given in numerical non-decreasing order
@@ -116,10 +114,6 @@ def makeWMat(listOfCourseNumbers):
                     wMat[a][b] = weightsByNum[key1]
 
     return wMat
-# -----------------------------------------------------------------------------------------
-
-# -------------------------------- the LP !!???!?!?! ---------------------------------------
-
 
 def makeCourseMapping(allCourses, currentCourses):
     """Makes a list mapping the in-order number of courses in the current selection of courses being sceduled,
@@ -136,7 +130,8 @@ def makeCourseMapping(allCourses, currentCourses):
     return courseMapping
 
 def makeSectionSubsets(courseMapping):
-    """TODO: DO THIS DOCUMENTATION"""
+    """Creates the subsets A_k, and stores them at the respective indices of a list
+    NOTE: creates subsets with only one course, which must be filtered out later"""
     subsets =  [ [] for _ in range(len(set(courseMapping)))]
     lastVal = courseMapping[0]
     k = 0
@@ -149,12 +144,13 @@ def makeSectionSubsets(courseMapping):
             lastVal = courseMapping[i]
 
     return subsets
+# -----------------------------------------------------------------------------------------
 
 
+# -------------------------------------- the IP -------------------------------------------
 def makeSchedule(profs, courses):
-    """Does all preprocessing necessary to run the IP based on the given list of profs and courses
-    
-    TODO: flech this out"""
+    """Does all preprocessing necessary to run the IP based on the given list of profs and courses. Use this to run schedule creation"""
+
     allCourses = [135,137,236,237,279,312,365,375,376,377,378,379,432,471,476,477,479] # all courses allowed by our model
 
     l = 0
@@ -169,16 +165,14 @@ def makeSchedule(profs, courses):
     coursesNumerical = list(range(len(courses))) # 1 through n, where n=number of courses in supplied schedule
     courseMapping = makeCourseMapping(allCourses, courses)
     sectionSubsets = makeSectionSubsets(courseMapping)
-    print(sectionSubsets)
 
     intervals = list(range(12))
 
-
     courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l, sectionSubsets)
 
-
 def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals, vMat, wMat, courses, profs, l, sectionSubsets):
-    """The IP itself TODO: flech this out"""   
+    """Builds and executes the course scheduling IP, printing out the schedule results, 
+    as well as the weight of any conflicts and professor workload violations"""   
     model = LpProblem(name='classes', sense=LpMinimize)
 
     x = LpVariable.dicts("x", (profsNumerical, coursesNumerical, intervals), cat="Binary")
@@ -207,8 +201,35 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
     for p in profsNumerical:
         model += lpSum(x[p][a][i] for a in coursesNumerical for i in intervals) - z[p] <= 2
 
+    # # CONSTRAINT 5:
+    for p in profsNumerical:
+        model += lpSum(x[p][a][i] for a in coursesNumerical[l:] for i in intervals) + z[p] <=2
 
-    # CONSTRAINT 5:
+    # CONSTRAINT 6:
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for b in coursesNumerical[a+1:]:
+                for c in coursesNumerical[b+1:]:
+                    m = (courseMapping[b]-courseMapping[a])*(courseMapping[c]-courseMapping[a])*(courseMapping[c]-courseMapping[b])
+                    model+= (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals) + lpSum(x[p][c][i] for i in intervals))*m <= 2.5*m
+    
+    # CONSTRAINT 7
+    # constraining d:
+    for p in profsNumerical:
+        for a in coursesNumerical:
+            for b in coursesNumerical[a+1:]:
+                for i in intervals[:-1]:
+                    if a != b:
+                        model += (x[p][a][i]+x[p][a][i+1]+x[p][b][i]+x[p][b][i+1] -2*d[p][a][b][i]>= 0)
+                        model += (x[p][a][i]+x[p][a][i+1]+x[p][b][i]+x[p][b][i+1] -2*d[p][a][b][i]<= 1)
+    # the constraint itself:
+    for p in profsNumerical:
+        for sectionSet in sectionSubsets:
+            if len(sectionSet) > 1:
+                model += (lpSum(d[p][sectionSet[b]][sectionSet[a]][i] for a in range(len(sectionSet)) for b in range(a+1,len(sectionSet)) for i in intervals[:-1]) >= lpSum(x[p][a][i] for a in sectionSet for i in intervals) -1 )
+    
+    
+    # CONSTRAINT 8:
     for i in intervals:
         for a in coursesNumerical:
             for b in coursesNumerical[a:]:
@@ -218,55 +239,10 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
             for b in coursesNumerical[a:]:
                 model += (lpSum(x[p][a][0] for p in profsNumerical) +  lpSum(x[p][b][7] for p in profsNumerical) - e[a][b]) <= 1
                 model += (lpSum(x[p][a][7] for p in profsNumerical) +  lpSum(x[p][b][0] for p in profsNumerical) - e[a][b]) <= 1
-
-
-    # # CONSTRAINT 6:
-    for p in profsNumerical:
-        model += lpSum(x[p][a][i] for a in coursesNumerical[l:] for i in intervals) + z[p] <=2
-
-    # CONSTRAINT 7:
-    for p in profsNumerical:
-        for a in coursesNumerical:
-            for b in coursesNumerical[a+1:]:
-                for c in coursesNumerical[b+1:]:
-                    m = (courseMapping[b]-courseMapping[a])*(courseMapping[c]-courseMapping[a])*(courseMapping[c]-courseMapping[b])
-                    model+= (lpSum(x[p][a][i] for i in intervals) + lpSum(x[p][b][i] for i in intervals) + lpSum(x[p][c][i] for i in intervals))*m <= 2.5*m
-    
-
-    # CONSTRAINT 8
-    # for p in profsNumerical:
-    #     for a in coursesNumerical:
-    #         for b in coursesNumerical[a+1:]:
-    #             for i in intervals[1:len(intervals)-1]:
-    #                 if courseMapping[a] == courseMapping[b]:
-    #                     model += (x[p][b][i-1] + x[p][b][i+1] >= x[p][a][i])
-    #                     # model += (x[p][b][len(intervals)-2] >= x[p][a][len(intervals)-1])
-    #                     # model += (x[p][b][1] >= x[p][a][0])
-    #                 else:
-    #                     model += (x[p][b][i-1] + x[p][b][i+1] <= (1 - x[p][a][i]))
-    #                     # model += (x[p][b][len(intervals)-2] <= (1 - x[p][a][len(intervals)-1]))
-    #                     # model += (x[p][b][1] <= 1- x[p][a][0])
-
-    # CONSTRAINT 8:
-    
-    for p in profsNumerical:
-        for a in coursesNumerical:
-            for b in coursesNumerical[a+1:]:
-                for i in intervals[:-1]:
-                    if a != b:
-                        model += (x[p][a][i]+x[p][a][i+1]+x[p][b][i]+x[p][b][i+1] -2*d[p][a][b][i]>= 0)
-                        model += (x[p][a][i]+x[p][a][i+1]+x[p][b][i]+x[p][b][i+1] -2*d[p][a][b][i]<= 1)
-    
-    for p in profsNumerical:
-        for sectionSet in sectionSubsets:
-            if len(sectionSet) > 1:
-                model += (lpSum(d[p][sectionSet[b]][sectionSet[a]][i] for a in range(len(sectionSet)) for b in range(a+1,len(sectionSet)) for i in intervals[:-1]) >= lpSum(x[p][a][i] for a in sectionSet for i in intervals) -1 )
-    # fix after lunch!!
-    
+       
                         
     # CONSTRAINT DAVE:
     model += lpSum(x[2][a][i] for a in coursesNumerical for i in intervals) <=1 # Dave only gets to teach one class TODO: stop hardcoding this!
-
 
 
     # OBJECTIVE FUNCTION: 
@@ -274,7 +250,6 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
     zee = lpSum(z[p] for p in profsNumerical)
     obj_func =  weights + zee
     model += obj_func
-
 
 
     # SOLVE AND PRINT RESULTS
@@ -289,30 +264,10 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
             for i in intervals:
                 if x[p][a][i].value() == 1:
                     print(profs[p],"teaches", courseNames[courses[a]], "at", intervalNames[i])
-
-    # for p in profsNumerical:  
-    #     j=0             
-    #     for a in range(len(sectionSubsets[4])):
-    #         for b in range(a+1, len(sectionSubsets[4])):
-    #             for i in intervals:
-    #                 if d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value() != None:
-    #                     j+= d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value()
-    #                 print(d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i], "=", d[p][sectionSubsets[4][b]][sectionSubsets[4][a]][i].value())
-
-    #     print("for p",p,"j=",j)
-
-    # for p in profsNumerical:              
-    #     k = 0
-    #     for a in sectionSubsets[4]:
-    #         for i in intervals:
-    #             k += x[p][a][i].value()
-    #     print("k=",k)
+# -----------------------------------------------------------------------------------------
 
 
-
-
-
-
+# ------------------------- input to run the program --------------------------------------
 profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Taryn", "Will"] # the names of each professor to be included in the program
 profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Rachael", "Will"] # the names of the profs who taught Fall 2022 (so not Lori or Taryn)
 profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Will"] # the names of the profs who taught Spring 2022 (so not Taryn)
@@ -323,3 +278,4 @@ coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,
 
 
 makeSchedule(profsFall, coursesFall)
+# ------------------------------------------------------------------------------------------
