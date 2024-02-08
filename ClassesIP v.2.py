@@ -85,16 +85,18 @@ def makeWMat(listOfCourseNumbers):
 
     weightsByNum = { # this controls how conflicts are weighted based on their course numbers
         100100: 0,
-        100200: 2,
-        100300: 0,
+        100200: 2, # 4
+        100300: 0, 
         100400: 0,
-        200200: 3,
-        200300: 3,
-        200400: 1,
-        300300: 4,
-        300400: 4,
-        400400: 3   
+        200200: 3, # 1
+        200300: 3, # 4
+        200400: 1, # 2
+        300300: 4, # 0
+        300400: 4, # 1
+        400400: 3 # 0 
     }
+
+    # 4(2) + 3 + 4(3) + 2 + 4 = 29 = Spring 24 dissonance
 
     wMat = [[0 for x in range(len(listOfCourseNumbers))] for y in range(len(listOfCourseNumbers))] # initializes the weight matrix with all 0s
 
@@ -272,13 +274,17 @@ def courseScheduleIP(profsNumerical, coursesNumerical, courseMapping, intervals,
 
 
 # ------------------------- input to run the program --------------------------------------
+
 profs = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Taryn", "Will"] # the names of each professor to be included in the program
 profsFall =  ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Rachael", "Will"] # the names of the profs who taught Fall 2022 (so not Lori or Taryn)
 profsSpring = ["Alireza", "Andrew", "David", "Kristin", "Lisa", "Lori", "Rachael", "Will"] # the names of the profs who taught Spring 2022 (so not Taryn)
 
+profsSpring24 = ["Andrew", "David", "Kristin", "Lori", "Taryn", "Will", "Yariana", "Robert", "Paul", "Ben"] # names of the profs who are teaching in spring of '24
+
 
 coursesFall =    [135,135,135,137,137,137,236,236,237,237,279,279,312,375,377,432, 479] # courses from 2022 fall
 coursesSpring =    [135,135,135,137,137,236,236,236,237,237,279,279,312,365,365,376,378,471] # courses from 2023 spring
+coursesSpring24 = [135,135,137,137,194,236,236,236,237,279,279,279,312,365,365,376,378,477,479 ] # courses from Spring '24 NOTE: THIS WILL THROW AN ERROR RIGHT NOW AS 194 IS NOT ACCOUNTED FOR
 
 
 makeSchedule(profsFall, coursesFall)
